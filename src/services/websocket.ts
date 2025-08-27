@@ -16,7 +16,7 @@ class WebSocketService {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.socket = io(`${import.meta.env.VITE_REST_API_URL}/chat`, {
+      this.socket = io(`${(window as any).APP_CONFIG.REST_API_URL || import.meta.env.VITE_REST_API_URL}/chat`, {
         withCredentials: true,
         transports: ['websocket', 'polling']
       })

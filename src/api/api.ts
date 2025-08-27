@@ -17,7 +17,7 @@ import { AuthApi } from './apis/auth-api';
 import { Configuration } from './configuration';
 import customAxios from './customAxios';
 
-const bkPath = import.meta.env.VITE_REST_API_URL || 'http://localhost:3001';
+const bkPath = (window as any).APP_CONFIG.REST_API_URL || import.meta.env.VITE_REST_API_URL;
 
 const config = new Configuration({
   basePath: bkPath

@@ -10,7 +10,23 @@ RUN npm run build
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 
+ENV REST_API_URL=http://localhost:3000
+
 COPY --from=build /app/dist /usr/share/nginx/html
+
+RUN <<'CONFIGJS' cat > /usr/share/nginx/html/config.template.js
+window.APP_CONFIG = {
+  REST_API_URL: "${REST_API_URL}"
+};
+CONFIGJS
+
+RUN <<'EOF' cat > /docker-entrypoint.d/10-config.sh
+#!/bin/sh
+set -e
+export REST_API_URL
+envsubst < /usr/share/nginx/html/config.template.js > /usr/share/nginx/html/config.js
+EOF
+RUN chmod 755 /docker-entrypoint.d/10-config.sh
 
 RUN <<'NGINXCONF' cat > /etc/nginx/conf.d/default.conf
 server {
@@ -19,6 +35,12 @@ server {
 
   root /usr/share/nginx/html;
   index index.html;
+
+  # config.js는 매 실행별 값이 달라질 수 있으니 캐시 금지
+  location = /config.js {
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+    try_files $uri =404;
+  }
 
   # 정적 리소스 캐싱
   location ~* \.(?:js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff2?)$ {
